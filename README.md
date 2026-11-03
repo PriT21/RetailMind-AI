@@ -38,3 +38,24 @@ Logistic Regression
 The model predicts whether a customer will churn or stay.
 
 Model saved at: `models/churn_pipeline.pkl`
+
+
+## Day 3 – Hyperparameter Tuning
+
+### Objective
+Improve churn prediction through hyperparameter tuning
+and bias-variance analysis.
+
+### Techniques
+- GridSearchCV
+- Stratified K-Fold Cross Validation
+- Bias-Variance Analysis
+- Learning Curves
+
+### Champion Model
+- Algorithm: [Actual winning model]
+- CV Recall: [Actual score]
+- Best Parameters: [Actual parameters]
+
+### Model Artifact
+models/churn_v3.joblib
