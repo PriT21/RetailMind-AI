@@ -1,4 +1,5 @@
-from src.predict import predict
+
+from src.predict import predict, predict_xgb
 
 customer = {
     "gender": "Male",
@@ -22,6 +23,8 @@ customer = {
     "TotalCharges": 352.5
 }
 
-result = predict(customer)
+print("Day 1 Prediction:")
+print(predict(customer))
 
-print(result)
+print("\nDay 4 XGBoost Prediction:")
+print(predict_xgb(customer))

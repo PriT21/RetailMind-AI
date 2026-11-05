@@ -54,7 +54,7 @@ and bias-variance analysis.
 
 ### Champion Model
 - Algorithm: [Actual winning model]
-- CV Recall: [Actual score]
+- CV Recall: [Actual score]Z
 - Best Parameters: [Actual parameters]
 
 ### Model Artifact
