@@ -59,3 +59,51 @@ and bias-variance analysis.
 
 ### Model Artifact
 models/churn_v3.joblib
+
+## Day 5 – Neural Networks and ANN
+
+### 1. MNIST Neural Network Demo
+- Loaded the MNIST handwritten digit dataset.
+- Normalized pixel values between 0 and 1.
+- Built an ANN using TensorFlow/Keras.
+- Used Flatten, Dense, ReLU and Softmax layers.
+- Achieved **97.57% test accuracy**.
+
+### 2. Customer Churn Prediction using ANN
+- Reused the Telco Customer Churn dataset.
+- Applied numerical scaling and categorical encoding.
+- Built an ANN with 64 and 32 hidden neurons.
+- Used ReLU activation in hidden layers and Sigmoid in the output layer.
+- Used Adam optimizer and Binary Crossentropy loss.
+- Applied EarlyStopping to monitor validation loss.
+
+### 3. ANN Evaluation
+
+| Metric | ANN |
+|---|---:|
+| Accuracy | 79.28% |
+| Precision | 62.20% |
+| Recall | 55.88% |
+| F1 Score | 58.87% |
+| ROC-AUC | 83.84% |
+
+### 4. SVM vs ANN Comparison
+
+| Metric | SVM | ANN |
+|---|---:|---:|
+| Accuracy | 74.38% | 79.28% |
+| Precision | 51.15% | 62.20% |
+| Recall | 77.27% | 55.88% |
+| F1 Score | 61.55% | 58.87% |
+| ROC-AUC | 82.11% | 83.84% |
+
+### 5. Conclusion
+
+- ANN achieved better accuracy, precision and ROC-AUC.
+- SVM achieved better recall and F1-score.
+- SVM is preferable when identifying more potential churn customers is the main priority.
+- ANN provides better overall accuracy and precision in this experiment.
+
+### 6. Model Artifact
+
+- `models/churn_ann_day5.keras` – Saved ANN model.
