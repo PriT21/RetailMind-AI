@@ -1,5 +1,17 @@
+# Virtual environment
 venv/
+
+# Dataset images
+myntradataset/images/
+
+# Model files
+models/*.keras
+models/*.pkl
+models/*.joblib
+
+# Python cache
 __pycache__/
 *.pyc
+
+# Jupyter checkpoints
 .ipynb_checkpoints/
-myntradataset/images/
