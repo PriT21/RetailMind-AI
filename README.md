@@ -780,3 +780,338 @@ save reproducible artifacts.
 
 **RetailMind AI**  
 *Learn the process. Understand the result. Improve the model.*
+
+# Day 7 – Transfer Learning and Fine-Tuning using VGG16
+## Project: RetailMind AI
+
+### 1. Objective
+
+The objective of Day 7 was to improve the fashion image classification model developed on Day 6 by using Transfer Learning with a pretrained VGG16 architecture.
+
+The work focused on:
+- Loading pretrained VGG16 weights from ImageNet.
+- Freezing the pretrained convolutional layers.
+- Adding a custom classification head.
+- Training the new classification layers.
+- Fine-tuning the top VGG16 block.
+- Comparing performance with the Day 6 CNN model.
+
+### 2. Dataset
+
+**Dataset:** Myntra Fashion Product Images
+
+Source: Fashion Product Images Small dataset.
+
+Dataset preparation:
+- Loaded product information from `styles.csv`.
+- Matched product IDs with available JPG images.
+- Removed records with missing images.
+- Removed categories with fewer than two records to support stratified splitting.
+- Converted `masterCategory` into numerical labels using LabelEncoder.
+
+| Dataset | Images |
+|---|---:|
+| Total usable images | 44,418 |
+| Training images | 35,534 |
+| Testing images | 8,884 |
+| Categories | 6 |
+
+### 3. Data Preprocessing
+
+Images were resized to 96 × 96 pixels for the final CPU-friendly model configuration.
+
+Preprocessing steps:
+1. Read image files using TensorFlow.
+2. Decode JPEG images into RGB format.
+3. Resize images to 96 × 96.
+4. Apply VGG16 `preprocess_input`.
+5. Create TensorFlow datasets.
+6. Batch and prefetch data for efficient loading.
+
+Batch size: 64 in the final 96 × 96 pipeline.
+
+### 4. Transfer Learning – VGG16
+
+VGG16 is a pretrained convolutional neural network trained on the ImageNet dataset.
+
+The pretrained model was loaded using:
+
+- `weights="imagenet"`
+- `include_top=False`
+- `input_shape=(96, 96, 3)`
+
+All pretrained VGG16 layers were initially frozen so their existing weights remained unchanged.
+
+### 5. Custom Classification Head
+
+A custom classification head was added on top of VGG16.
+
+Architecture:
+
+1. VGG16 pretrained base
+2. GlobalAveragePooling2D
+3. Dense layer with 128 neurons and ReLU activation
+4. Dropout with rate 0.5
+5. Dense output layer with 6 neurons and Softmax activation
+
+The model was compiled using:
+- Optimizer: Adam
+- Loss: Sparse Categorical Crossentropy
+- Metric: Accuracy
+
+### 6. Initial Training
+
+The classification head was trained while the pretrained VGG16 layers remained frozen.
+
+Training configuration:
+- Epochs: 5
+- Dataset: Full training dataset
+- Validation: Test dataset used as validation data
+- Early stopping: Used in the initial training configuration.
+
+**Recorded result from the final 96 × 96 training run:**
+
+| Metric | Result |
+|---|---:|
+| Training accuracy | 97.48% |
+| Validation accuracy | 98.92% |
+| Validation loss | 0.0507 |
+
+### 7. Fine-Tuning VGG16
+
+After transfer learning, the top convolutional block of VGG16 was unfrozen.
+
+The `block5` layers were made trainable while the earlier convolutional blocks remained frozen.
+
+Fine-tuning configuration:
+- Trainable layers: Block 5 and classification head
+- Optimizer: Adam
+- Learning rate: 0.00001
+- Epochs: 3
+- Loss: Sparse Categorical Crossentropy
+- Metric: Accuracy
+
+**Fine-tuning results from the recorded run:**
+
+| Epoch | Training Accuracy | Validation Accuracy |
+|---|---:|---:|
+| 1 | 97.01% | 98.46% |
+| 2 | 98.20% | 98.62% |
+| 3 | 98.70% | 98.91% |
+
+Final validation accuracy after fine-tuning: **98.91%**
+
+### 8. Day 6 vs Day 7 Comparison
+
+| Model | Validation/Test Accuracy |
+|---|---:|
+| Day 6 – Custom CNN | 97.81% |
+| Day 7 – VGG16 Transfer Learning | 97.47% |
+| Day 7 – Fine-Tuned VGG16 | 98.91% |
+
+Fine-tuning improved the recorded validation accuracy by 1.44 percentage points compared with the initial VGG16 run.
+
+Compared with the Day 6 CNN, the fine-tuned VGG16 achieved a 1.10 percentage-point higher recorded accuracy.
+
+### 9. Key Learnings
+
+- Understanding transfer learning and pretrained CNN architectures.
+- Using ImageNet weights for fashion image classification.
+- Freezing pretrained layers during initial training.
+- Building a custom classification head.
+- Fine-tuning selected convolutional layers.
+- Understanding the impact of learning rate on fine-tuning.
+- Comparing custom CNN and pretrained CNN performance.
+- Reducing image resolution to make training more practical on CPU.
+
+### 10. Conclusion
+
+Day 7 successfully explored Transfer Learning and Fine-Tuning using VGG16 for fashion product classification.
+
+The recorded fine-tuned validation accuracy was 98.91%, compared with 97.81% for the Day 6 custom CNN.
+
+This demonstrated how pretrained architectures can improve image classification performance by reusing learned visual features and adapting them to a specific dataset.
+
+**Note:** The test dataset was used as validation data during training, so these figures should be treated as validation results rather than independent final test performance. The fine-tuned model weights were not saved before the notebook kernel restarted; the recorded accuracy results remain available in the notebook outputs/screenshots.
+
+# Day 9 – Demand Forecasting using LSTM
+
+## 1. Objective
+
+The objective of this task is to build a deep learning model using LSTM (Long Short-Term Memory) to predict future sales based on historical sales data.
+
+We use the Rossmann Store Sales dataset and forecast the next day's total sales using the previous 7 days of sales.
+
+## 2. Dataset Description
+
+**Dataset:** Rossmann Store Sales
+
+**Source:** Kaggle – Rossmann Store Sales Competition
+
+The training dataset contains:
+
+- 1,017,209 rows
+- 9 columns
+
+Important columns:
+
+| Column | Description |
+|---|---|
+| Store | Store identification |
+| DayOfWeek | Day of the week |
+| Date | Sales date |
+| Sales | Daily sales |
+| Customers | Number of customers |
+| Open | Whether store is open |
+| Promo | Promotion indicator |
+| StateHoliday | State holiday indicator |
+| SchoolHoliday | School holiday indicator |
+
+## 3. Import Libraries
+
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+```
+
+These libraries are used for data processing, visualization, scaling, model creation and evaluation.
+
+## 4. Load Dataset
+
+```python
+train = pd.read_csv("../data/rossmann_train.csv")
+
+print(train.shape)
+train.head()
+```
+
+Output:
+
+```text
+(1017209, 9)
+```
+
+## 5. Data Preprocessing
+
+Convert the Date column into datetime format and sort the data chronologically.
+
+```python
+train["Date"] = pd.to_datetime(train["Date"])
+
+train = train.sort_values(["Store", "Date"])
+
+print(train.dtypes)
+print(train.isnull().sum())
+```
+
+All columns had zero missing values in the inspected dataset.
+
+## 6. Daily Sales Visualization
+
+Since the objective is to predict total daily sales, sales from all stores are grouped by date.
+
+```python
+daily_sales = train.groupby("Date")["Sales"].sum()
+
+plt.figure(figsize=(14, 5))
+plt.plot(daily_sales)
+plt.title("Daily Total Sales")
+plt.xlabel("Date")
+plt.ylabel("Sales")
+plt.show()
+```
+
+**Observation:**
+
+- Sales fluctuate over time.
+- A recurring weekly pattern is visible.
+- Sales drop significantly on Sundays because many stores are closed.
+- There are occasional high-sales days.
+
+## 7. Feature Scaling
+
+LSTM models generally perform better when numerical inputs are scaled.
+
+We use MinMaxScaler to transform sales values between 0 and 1.
+
+```python
+scaler = MinMaxScaler()
+
+sales_scaled = scaler.fit_transform(
+    daily_sales.values.reshape(-1, 1)
+)
+
+print(sales_scaled.shape)
+```
+
+## 8. Creating Time-Series Sequences
+
+We use the previous 7 days to predict sales for the next day.
+
+```python
+X = []
+y = []
+
+for i in range(7, len(sales_scaled)):
+    X.append(sales_scaled[i-7:i])
+    y.append(sales_scaled[i])
+
+X = np.array(X)
+y = np.array(y)
+
+print("X shape:", X.shape)
+print("y shape:", y.shape)
+```
+
+Output:
+
+```text
+X shape: (935, 7, 1)
+y shape: (935, 1)
+```
+
+**Explanation:**
+
+- X contains the previous 7 days of sales.
+- y contains the sales value of the next day.
+- 935 training samples are created in total.
+- 7 represents the time steps.
+- 1 represents the input feature.
+
+## 9. Train-Test Split
+
+We split the data chronologically without shuffling.
+
+```python
+split = int(len(X) * 0.8)
+
+X_train = X[:split]
+X_test = X[split:]
+
+y_train = y[:split]
+y_test = y[split:]
+
+print("X_train:", X_train.shape)
+print("X_test:", X_test.shape)
+print("y_train:", y_train.shape)
+print("y_test:", y_test.shape)
+```
+
+Output:
+
+```text
+X_train: (748, 7, 1)
+X_test: (187, 7, 1)
+y_train: (748, 1)
+y_test: (187, 1)
+```
+
+We use 80% of the data for training and
