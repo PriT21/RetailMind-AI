@@ -1115,3 +1115,158 @@ y_test: (187, 1)
 ```
 
 We use 80% of the data for training and
+
+# Day 10 -- Seq2Seq & Attention-Based Demand Forecasting
+
+## 1. Objective
+
+Build a Seq2Seq LSTM model with Attention to predict the next 7 days of
+sales using the previous 14 days of historical data.
+
+## 2. Dataset Description
+
+**Dataset:** Rossmann Store Sales (Kaggle)
+
+-   Original rows: 1,017,209
+-   Columns: 9
+-   Daily aggregated records: 942
+
+Important columns: Store, Date, Sales, Customers, Promo and holiday
+indicators.
+
+## 3. Data Preprocessing
+
+``` python
+train = pd.read_csv("../data/rossmann_train.csv")
+train["Date"] = pd.to_datetime(train["Date"])
+train = train.sort_values(["Store", "Date"])
+daily_sales = train.groupby("Date")["Sales"].sum()
+```
+
+Sales from all stores are aggregated by date.
+
+## 4. Feature Scaling
+
+``` python
+scaler = MinMaxScaler()
+sales_scaled = scaler.fit_transform(daily_sales.values.reshape(-1, 1))
+```
+
+MinMaxScaler converts sales values between 0 and 1.
+
+## 5. Creating Sequences
+
+**Input:** Previous 14 days\
+**Output:** Next 7 days
+
+``` python
+X = []
+y = []
+input_days = 14
+output_days = 7
+
+for i in range(input_days, len(sales_scaled) - output_days + 1):
+    X.append(sales_scaled[i-input_days:i])
+    y.append(sales_scaled[i:i+output_days])
+
+X = np.array(X)
+y = np.array(y)
+```
+
+## 6. Train-Test Split
+
+``` python
+split = int(len(X) * 0.8)
+X_train, X_test = X[:split], X[split:]
+y_train, y_test = y[:split], y[split:]
+```
+
+Chronological split: 80% training and 20% testing.
+
+## 7. Build Seq2Seq Attention Model
+
+-   **Encoder:** Learns historical sales patterns using LSTM(64).
+-   **Decoder:** Generates future representations for 7 days.
+-   **Attention:** Helps the Decoder focus on historical information.
+
+``` python
+encoder_inputs = Input(shape=(14, 1))
+encoder_lstm = LSTM(64, return_sequences=True, return_state=True)
+encoder_outputs, state_h, state_c = encoder_lstm(encoder_inputs)
+
+decoder_inputs = RepeatVector(7)(state_h)
+decoder_lstm = LSTM(64, return_sequences=True)
+decoder_outputs = decoder_lstm(
+    decoder_inputs,
+    initial_state=[state_h, state_c]
+)
+
+attention = Attention()
+context = attention([decoder_outputs, encoder_outputs])
+combined = Concatenate(axis=-1)([decoder_outputs, context])
+outputs = TimeDistributed(Dense(1))(combined)
+
+model = Model(encoder_inputs, outputs)
+model.compile(optimizer="adam", loss="mse", metrics=["mae"])
+```
+
+## 8. Model Training
+
+``` python
+history = model.fit(
+    X_train, y_train,
+    epochs=20,
+    batch_size=32,
+    validation_split=0.1
+)
+```
+
+## 9. Evaluation Results
+
+  Metric                       Result
+  -------------------- --------------
+  Test Loss                   0.04324
+  Test MAE (scaled)           0.16029
+  MAE (actual sales)     2,488,759.59
+  RMSE                   3,228,639.01
+
+## 10. Predictions and Attention Visualization
+
+The model predicts 7 future days.
+
+``` python
+predictions = model.predict(X_test)
+predictions_actual = scaler.inverse_transform(
+    predictions.reshape(-1, 1)
+).reshape(-1, 7)
+
+actual_values = scaler.inverse_transform(
+    y_test.reshape(-1, 1)
+).reshape(-1, 7)
+```
+
+Attention weights were visualized using a heatmap to understand how the
+model distributes attention across the previous 14 days.
+
+**Observation:** Predictions were smoother than actual sales and
+struggled with sudden peaks and drops.
+
+## 11. Save Model
+
+``` python
+model.save("../models/rossmann_seq2seq_attention_day10.keras")
+joblib.dump(scaler, "../models/rossmann_seq2seq_scaler_day10.pkl")
+```
+
+## 12. Conclusion
+
+Successfully developed a Seq2Seq LSTM model with Attention for 7-day
+demand forecasting.
+
+**Learnings:** - Sequence-to-Sequence architecture - Encoder and Decoder
+LSTM - Attention mechanism - Multi-step forecasting - Attention heatmap
+visualization - Model evaluation using MAE and RMSE
+
+**Final Learning:** Seq2Seq with Attention helps forecast multiple
+future time steps by learning historical patterns and focusing on
+relevant past information.
