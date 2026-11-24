@@ -1270,3 +1270,69 @@ visualization - Model evaluation using MAE and RMSE
 **Final Learning:** Seq2Seq with Attention helps forecast multiple
 future time steps by learning historical patterns and focusing on
 relevant past information.
+# Day 11 — VAE-Based Product Image Generation
+
+## Objective
+Train a Variational Autoencoder (VAE) to generate synthetic product images, inspect image diversity, and check how an existing CNN classifies the generated samples.
+
+## Dataset
+- Source: Myntra `styles.csv` and product images
+- Selected category: Apparel
+- Training subset: 2,000 images
+- Image size: 64 × 64 RGB
+- Pixel values normalized to [0, 1]
+- Note: Apparel was selected for a manageable VAE experiment. It is not one of the underrepresented categories.
+
+## VAE Architecture
+- Encoder: two Conv2D layers with 32 and 64 filters, followed by Flatten and Dense layers for `z_mean` and `z_log_var`
+- Latent dimension: 128
+- Sampling: reparameterization using random noise
+- Decoder: Dense + Reshape followed by three Conv2DTranspose layers
+- Output: 64 × 64 × 3 with sigmoid activation
+
+## Training
+- Optimizer: Adam
+- Epochs: 20
+- Batch size: 32
+- Training loss decreased overall from approximately 1,720 to 1,083.
+- Loss fluctuated during training but showed an overall downward trend.
+
+## Generated Images and Reconstruction
+- Generated 25 images from randomly sampled latent vectors.
+- Generated samples showed different colours and shapes, with no obvious mode collapse in the inspected grid.
+- Original-versus-reconstructed comparisons showed that broad clothing shapes and colours were sometimes preserved.
+- Images were noticeably blurry and fine details were lost.
+
+## Existing CNN Check
+The Day 6 CNN expected input shape `(128, 128, 3)` and produced 6 output classes. The 25 VAE images were resized to 128 × 128 and passed through the saved CNN.
+
+Verified class mapping:
+| Index | Category |
+|---:|---|
+| 0 | Accessories |
+| 1 | Apparel |
+| 2 | Footwear |
+| 3 | Free Items |
+| 4 | Personal Care |
+| 5 | Sporting Goods |
+
+CNN predictions for the 25 generated images:
+| Predicted category | Count |
+|---|---:|
+| Accessories | 7 |
+| Apparel | 15 |
+| Footwear | 0 |
+| Free Items | 0 |
+| Personal Care | 3 |
+| Sporting Goods | 0 |
+
+Thus, 15/25 (60%) were classified as Apparel by the existing CNN. This is a prediction consistency check, **not** a measured accuracy score.
+
+## Limitations and Conclusion
+- The VAE generated visually varied but blurry images.
+- The experiment used Apparel images, not the minority categories Free Items or Sporting Goods.
+- Therefore, these synthetic images must not be relabelled as minority-class samples.
+- Per-class accuracy improvement has **not** been measured. That would require training or fine-tuning a classifier with correctly labelled synthetic data and evaluating it against the same untouched test set.
+- No claim of minority-class improvement is made from the current experiment.
+
+The experiment demonstrates a basic VAE image-generation workflow, reconstruction, visual diversity inspection, and inference using an existing CNN.

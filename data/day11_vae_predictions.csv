@@ -1,0 +1,26 @@
+Image,Predicted_Class,Predicted_Category,Confidence
+1,1,Apparel,0.69448614
+2,1,Apparel,0.7063931
+3,1,Apparel,0.77763957
+4,0,Accessories,0.52035946
+5,0,Accessories,0.5477956
+6,1,Apparel,0.8702439
+7,1,Apparel,0.5859916
+8,0,Accessories,0.98293823
+9,1,Apparel,0.88603574
+10,1,Apparel,0.7241844
+11,4,Personal Care,0.9867393
+12,1,Apparel,0.9844096
+13,0,Accessories,0.65110743
+14,4,Personal Care,0.79127157
+15,4,Personal Care,0.68903846
+16,0,Accessories,0.4892116
+17,1,Apparel,0.83585465
+18,0,Accessories,0.67006373
+19,1,Apparel,0.9715773
+20,1,Apparel,0.8492739
+21,0,Accessories,0.49280226
+22,1,Apparel,0.9144926
+23,1,Apparel,0.96088314
+24,1,Apparel,0.5791489
+25,1,Apparel,0.967905
